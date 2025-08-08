@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Guide du tri - Lisibilité améliorée</title>
+  <meta name="description" content="Entrez un produit, choisissez une suggestion, et voyez où le jeter : poubelle jaune, compost, ordures ménagères ou déchetterie." />
+  <style>
+    :root{
+      /* Palette claire, contrastée */
+      --bg-1: #f8fafc; /* slate-50 */
+      --bg-2: #eef2f7; /* slate-100-ish */
+      --text: #0f172a; /* slate-900 */
+      --muted: #475569; /* slate-600 */
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --ring: #16a34a; /* green-600 */
+
+      --amber-700: #b45309;
+      --amber-100: #fef3c7;
+      --green-700: #166534;
+      --green-100: #dcfce7;
+      --slate-700: #334155;
+      --slate-100: #f1f5f9;
+      --violet-700: #5b21b6;
+      --violet-100: #ede9fe;
+
+      --radius: 16px;
+      --shadow-1: 0 8px 28px rgba(2,6,23,0.08);
+      --shadow-2: 0 1px 2px rgba(2,6,23,0.06);
+
+      --focus-ring: 0 0 0 3px rgba(22,163,74,0.2);
+      --mark-bg: #fef08a; /* yellow-200 */
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1.5;
+    }
+
+    .container{
+      max-width: 820px;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 28px) clamp(14px, 4vw, 28px) 64px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding: 2px 0 8px;
+    }
+    .logo{
+      width:54px; height:54px;
+      display:grid; place-items:center;
+      border-radius:14px;
+      background: linear-gradient(135deg, #22c55e, #86efac);
+      color:#064e3b;
+      font-size:26px;
+      font-weight:900;
+      box-shadow: var(--shadow-1);
+    }
+    .title h1{
+      margin:0;
+      font-size: clamp(20px, 3.6vw, 28px);
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+    .title p{
+      margin:4px 0 0 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    main{ margin-top: 14px; }
+
+    label{
+      display:block;
+      font-size:14px;
+      color: var(--muted);
+      margin: 0 0 8px 2px;
+    }
+
+    .search-card{
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 14px 12px;
+      box-shadow: var(--shadow-1);
+    }
+
+    .search-wrap{ position:relative; }
+    .input{
+      width:100%;
+      height:56px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: #ffffff;
+      color: var(--text);
+      padding: 14px 52px 14px 46px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s, background .15s, transform .06s ease;
+      box-shadow: var(--shadow-2);
+    }
+    .input::placeholder{ color:#64748b; }
+    .input:focus{
+      border-color: #86efac;
+      box-shadow: var(--focus-ring);
+    }
+    .input:active { transform: translateY(1px); }
+
+    .leading-icon{
+      position:absolute; left:10px; top:50%; transform: translateY(-50%);
+      width:28px; height:28px; border-radius: 8px;
+      display:grid; place-items:center;
+      color:#0f766e; background:#ecfeff;
+      border: 1px solid #bae6fd;
+    }
+    .leading-icon span{ font-size:14px }
+
+    .clear-btn{
+      position:absolute; right:8px; top:50%; transform: translateY(-50%);
+      height:40px; min-width:40px;
+      border:1px solid var(--border); border-radius:10px;
+      background:#ffffff; color:#334155;
+      font-size:16px; padding:0 10px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      box-shadow: var(--shadow-2);
+    }
+    .clear-btn:active{ transform: translateY(-50%) scale(0.98); }
+    .clear-btn:focus{ outline: none; box-shadow: var(--focus-ring); }
+
+    .suggestions{
+      position:absolute; z-index: 20; top: calc(100% + 10px); left:0; right:0;
+      background: #ffffff;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding:6px;
+      box-shadow: 0 20px 44px rgba(2,6,23,0.12), 0 3px 8px rgba(2,6,23,0.08);
+      max-height: 56vh; overflow:auto;
+    }
+    .s-head{
+      padding: 8px 12px 6px;
+      font-size: 12px; color:#64748b;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #f8fafc, #ffffff);
+      border-radius: 10px 10px 0 0;
+    }
+    .s-item{
+      list-style: none;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding:12px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size:16px;
+      color: var(--text);
+      border:1px solid transparent;
+      transition: background .12s, border-color .12s, transform .06s;
+    }
+    .s-item:hover, .s-item[aria-selected="true"]{
+      background: var(--slate-100);
+      border-color: var(--border);
+    }
+    .s-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .s-left .avatar{
+      width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
+      background:#f1f5f9; color:#334155; font-size:13px; flex:0 0 auto;
+      border: 1px solid var(--border);
+    }
+    .s-left .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .s-right{ display:flex; align-items:center; gap:8px; }
+    .s-right .arrow{ color:#64748b }
+
+    .pill{
+      font-size:12px; padding:6px 10px; border-radius: 999px; font-weight:800;
+      border:1px solid transparent; white-space: nowrap; line-height: 1;
+    }
+    .cat-jaune { color: var(--amber-700); background: var(--amber-100); border-color: #fcd34d; }
+    .cat-compost { color: var(--green-700); background: var(--green-100); border-color: #86efac; }
+    .cat-ordures { color: var(--slate-700); background: var(--slate-100); border-color: #cbd5e1; }
+    .cat-dechetterie { color: var(--violet-700); background: var(--violet-100); border-color: #d8b4fe; }
+
+    .empty{
+      padding:12px; color: #64748b; font-size:14px;
+    }
+
+    .result{
+      margin-top:18px;
+      background: var(--surface);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-1);
+      overflow: hidden;
+      opacity: 0; transform: translateY(6px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .result.show { opacity: 1; transform: translateY(0); }
+    .r-accent{
+      height: 6px; width: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #e2e8f0, #ffffff);
+      margin-bottom: 10px;
+    }
+    .r-head{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+    }
+    .product{
+      font-size: clamp(18px, 3.6vw, 22px); font-weight:900; margin:0 0 6px 0;
+      letter-spacing: .2px;
+    }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      font-weight:900; font-size:14px; line-height:1;
+      padding:10px 12px; border-radius: 12px;
+      border:1px solid #e5e7eb; color:#0f172a;
+      white-space: nowrap; background: #ffffff;
+      box-shadow: var(--shadow-2);
+    }
+    .badge.cat-jaune { border-color:#fcd34d; background: #fffaf0; }
+    .badge.cat-compost { border-color:#86efac; background: #f0fdf4; }
+    .badge.cat-ordures { border-color:#cbd5e1; background: #f8fafc; }
+    .badge.cat-dechetterie { border-color:#d8b4fe; background: #faf5ff; }
+
+    .badge .dot{ width:10px; height:10px; border-radius:999px; background: currentColor; box-shadow: 0 0 0 2px rgba(0,0,0,0.06) inset; }
+    .badge .ico{ font-size:16px; }
+
+    .r-note{ margin-top:10px; font-size:15px; color:#334155; }
+
+    .syns{
+      margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;
+    }
+    .syn-chip{
+      font-size:12px; padding:6px 8px; border-radius:999px; color:#1f2937; background:#f1f5f9; border:1px solid var(--border);
+    }
+
+    .guides{
+      margin-top:14px; background: #ffffff; border:1px dashed var(--border); border-radius:12px; padding:12px;
+    }
+    details{ border-radius:10px; }
+    summary{
+      cursor:pointer;
+      list-style: none;
+      display:flex; align-items:center; gap:8px;
+      color:#0f172a; font-weight:800; font-size:14px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .tips{ margin-top:10px; font-size:14px; color:#334155; }
+    .tips li{ margin:6px 0; }
+
+    .disclaimer{ margin-top:14px; font-size:12px; color: #64748b; }
+    footer{ margin-top:22px; color: #64748b; font-size:12px; text-align:center; }
+
+    mark{
+      background: var(--mark-bg);
+      color: inherit; padding: 0 .5px; border-radius: 2px;
+    }
+
+    /* Accessibilité: focus visible + réduire animations */
+    :focus-visible { outline: none; box-shadow: var(--focus-ring); border-radius: 8px; }
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo" aria-hidden="true">♻️</div>
+      <div class="title">
+        <h1>Guide du tri</h1>
+        <p>Entrez un produit et choisissez une suggestion</p>
+      </div>
+    </header>
+
+    <main role="main">
+      <section class="search-card" aria-label="Recherche de produit">
+        <form class="search" role="search" autocomplete="off" onsubmit="return false">
+          <label for="product-input">Nom du produit</label>
+          <div class="search-wrap" aria-haspopup="listbox" aria-owns="suggestions" aria-expanded="false">
+            <div class="leading-icon" aria-hidden="true"><span>🔎</span></div>
+            <input
+              id="product-input"
+              class="input"
+              type="text"
+              inputmode="search"
+              autocapitalize="sentences"
+              autocorrect="on"
+              aria-autocomplete="list"
+              aria-controls="suggestions"
+              aria-activedescendant=""
+              placeholder="Ex. bouteille plastique, canette, peau de banane…"
+            />
+            <button type="button" class="clear-btn" id="clear-btn" aria-label="Effacer la saisie">✕</button>
+            <div id="suggestions" class="suggestions" role="listbox" aria-label="Suggestions" hidden></div>
+          </div>
+        </form>
+      </section>
+
+      <section id="result" class="result" aria-live="polite" hidden>
+        <div class="r-accent" aria-hidden="true"></div>
+        <div class="r-head">
+          <div>
+            <h2 id="product-name" class="product"></h2>
+            <div id="category-badge" class="badge"><span class="ico" aria-hidden="true">ℹ️</span><span class="dot" aria-hidden="true"></span><span></span></div>
+          </div>
+        </div>
+        <p id="category-note" class="r-note"></p>
+        <div id="synonyms" class="syns" hidden></div>
+
+        <div class="guides">
+          <details>
+            <summary>Consignes générales</summary>
+            <ul class="tips">
+              <li><strong>Poubelle jaune de tri</strong> : emballages et papiers. Videz, inutile de laver. Déposez en vrac, non imbriqués.</li>
+              <li><strong>Compost</strong> : déchets organiques (épluchures, marc de café, pain…). Évitez viande/poisson si compost domestique.</li>
+              <li><strong>Ordures ménagères</strong> : ce qui n’est ni compostable ni recyclable. Emballez pour éviter les nuisances.</li>
+              <li><strong>Déchetterie</strong> : déchets dangereux, électriques/électroniques, volumineux (piles, peintures, huiles, batteries…).</li>
+            </ul>
+          </details>
+        </div>
+
+        <p class="disclaimer">Les consignes peuvent varier selon votre commune. Référez‑vous à votre collectivité en cas de doute.</p>
+      </section>
+
+      <footer>
+        Fait pour mobile et tablette • Aucune donnée n’est envoyée en ligne
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Catégories: "poubelle_jaune", "compost", "ordures", "dechetterie"
+    const ITEMS = [
+      // ===================== Poubelle jaune (emballages et papiers) =====================
+      { name: "Bouteille en plastique", category: "poubelle_jaune", synonyms: ["bouteille plastique","bouteille PET","bouteille eau"], note: "Écrasez légèrement, rebouchez et mettez dans le bac jaune." },
+      { name: "Flacon de shampoing", category: "poubelle_jaune", synonyms: ["flacon shampooing","flacon gel douche"], note: "Bien vider, remettre le bouchon." },
+      { name: "Bidon de lessive", category: "poubelle_jaune", synonyms: ["bidon détergent","bidon javel vide"], note: "Uniquement bien vide." },
+      { name: "Barquette en plastique", category: "poubelle_jaune", synonyms: ["barquette plastique","barquette alimentaire"], note: "" },
+      { name: "Barquette en polystyrène", category: "poubelle_jaune", synonyms: ["barquette PS","barquette XPS"], note: "" },
+      { name: "Barquette en aluminium", category: "poubelle_jaune", synonyms: ["barquette alu"], note: "" },
+      { name: "Canette", category: "poubelle_jaune", synonyms: ["canette aluminium","canette métal","boîte boisson"], note: "Bien vidée, inutile de rincer." },
+      { name: "Boîte de conserve", category: "poubelle_jaune", synonyms: ["boite conserve","métal"], note: "" },
+      { name: "Brique alimentaire", category: "poubelle_jaune", synonyms: ["brique lait","brique jus","Tetra Pak"], note: "" },
+      { name: "Carton", category: "poubelle_jaune", synonyms: ["cartonnette","emballage carton","boîte carton"], note: "Pliez pour gagner de la place. Si très gras/souillé → ordures." },
+      { name: "Carton de pizza propre", category: "poubelle_jaune", synonyms: ["boîte pizza propre"], note: "Sans résidus gras importants. Souillé → ordures." },
+      { name: "Papier journal", category: "poubelle_jaune", synonyms: ["journal","magazine","prospectus","revue"], note: "" },
+      { name: "Enveloppe avec fenêtre", category: "poubelle_jaune", synonyms: ["enveloppe fenêtre"], note: "Laisser la fenêtre plastique, triée avec le papier." },
+      { name: "Boîte de céréales", category: "poubelle_jaune", synonyms: ["emballage céréales","étui carton"], note: "" },
+      { name: "Sachet plastique", category: "poubelle_jaune", synonyms: ["sac plastique","emballage souple","film plastique","film étirable","cellophane"], note: "" },
+      { name: "Sachet de chips", category: "poubelle_jaune", synonyms: ["sachet apéritif","emballage chips"], note: "" },
+      { name: "Pot de yaourt", category: "poubelle_jaune", synonyms: ["pot yaourt plastique","yaourt pot"], note: "" },
+      { name: "Barquette de viande", category: "poubelle_jaune", synonyms: ["barquette boucherie"], note: "" },
+      { name: "Pot de crème fraîche", category: "poubelle_jaune", synonyms: ["pot crème"], note: "" },
+      { name: "Couvercle métal de bocal", category: "poubelle_jaune", synonyms: ["capsule métal bocal","couvercle bocal"], note: "" },
+      { name: "Papier aluminium", category: "poubelle_jaune", synonyms: ["feuille alu","aluminium ménager"], note: "S’il n’est pas trop sale. Boulez-le pour faciliter le tri." },
+      { name: "Barquette en aluminium pâtisserie", category: "poubelle_jaune", synonyms: ["barquette alu pâtisserie"], note: "" },
+      { name: "Aérosol vide", category: "poubelle_jaune", synonyms: ["spray vide","bombe aérosol"], note: "Uniquement s’il est totalement vide et non dangereux." },
+      { name: "Déodorant spray vide", category: "poubelle_jaune", synonyms: ["aérosol déo vide"], note: "" },
+      { name: "Tube de dentifrice", category: "poubelle_jaune", synonyms: ["tube dentifrice vide"], note: "Bien vidé." },
+      { name: "Flacon de produit d’entretien vide", category: "poubelle_jaune", synonyms: ["flacon nettoyant vide"], note: "Bien vide." },
+      { name: "Gobelet en plastique", category: "poubelle_jaune", synonyms: ["gobelet plastique"], note: "" },
+      { name: "Gobelet carton plastifié", category: "poubelle_jaune", synonyms: ["gobelet carton"], note: "" },
+      { name: "Rouleau carton (PQ, essuie‑tout)", category: "poubelle_jaune", synonyms: ["tube carton"], note: "" },
+      { name: "Sac papier kraft", category: "poubelle_jaune", synonyms: ["sac kraft"], note: "S’il n’est pas gras." },
+      { name: "Boîte à œufs en carton", category: "poubelle_jaune", synonyms: ["boite oeufs carton"], note: "Peut aussi aller au compost." },
+      { name: "Barquette noire plastique", category: "poubelle_jaune", synonyms: ["barquette noire"], note: "" },
+      { name: "Sachet congélation", category: "poubelle_jaune", synonyms: ["sac congélation"], note: "" },
+      { name: "Film bulles", category: "poubelle_jaune", synonyms: ["papier bulle","film à bulles"], note: "" },
+      { name: "Boîte de médicaments vide (carton)", category: "poubelle_jaune", synonyms: ["étui médicaments"], note: "Les médicaments non utilisés → pharmacie (Cyclamed), pas en poubelle." },
+      { name: "Bouchon plastique", category: "poubelle_jaune", synonyms: ["bouchon bouteille"], note: "À revisser sur la bouteille ou à mettre en vrac." },
+      { name: "Bouchon métallique", category: "poubelle_jaune", synonyms: ["capsule métal"], note: "" },
+      { name: "Sachet croquettes (plastique)", category: "poubelle_jaune", synonyms: ["emballage croquettes"], note: "" },
+      { name: "Boîte de biscuits", category: "poubelle_jaune", synonyms: ["emballage biscuits","étui biscuits"], note: "" },
+      { name: "Emballage chocolat", category: "poubelle_jaune", synonyms: ["papier chocolat","emballage sucrerie"], note: "" },
+      { name: "Papier cadeau sans paillettes", category: "poubelle_jaune", synonyms: ["papier cadeau simple"], note: "S’il n’est pas plastifié ni pailleté." },
+      { name: "Catalogue", category: "poubelle_jaune", synonyms: ["brochure","prospectus"], note: "" },
+      { name: "Lettre papier", category: "poubelle_jaune", synonyms: ["feuille A4","papier"], note: "" },
+      { name: "Carton de colis", category: "poubelle_jaune", synonyms: ["carton d’emballage","boîte e‑commerce"], note: "Retirez scotch/plastiques si possible." },
+      { name: "Sachet salade (plastique)", category: "poubelle_jaune", synonyms: ["emballage salade"], note: "" },
+      { name: "Barquette fruits", category: "poubelle_jaune", synonyms: ["barquette fraises"], note: "" },
+      { name: "Filet d’oranges (plastique)", category: "poubelle_jaune", synonyms: ["filet agrumes"], note: "" },
+      { name: "Filet de pommes de terre", category: "poubelle_jaune", synonyms: ["filet patates"], note: "" },
+      { name: "Boîte de thé (carton)", category: "poubelle_jaune", synonyms: ["étui thé"], note: "" },
+      { name: "Barquette fromagère", category: "poubelle_jaune", synonyms: ["barquette fromage"], note: "" },
+      { name: "Pot cosmétique plastique", category: "poubelle_jaune", synonyms: ["pot crème visage"], note: "Bien vidé, bouchon remis." },
+      { name: "Boîte à œufs plastique", category: "poubelle_jaune", synonyms: ["boite oeufs plastique"], note: "" },
+      { name: "Assiette en carton propre", category: "poubelle_jaune", synonyms: ["assiette carton"], note: "Propre et sans résidus. Sinon → ordures." },
+      { name: "Déodorant stick", category: "poubelle_jaune", synonyms: ["stick déo"], note: "Bien vidé." },
+      { name: "Shampoing solide emballage papier", category: "poubelle_jaune", synonyms: ["emballage savon papier"], note: "" },
+      { name: "Sachet surgelés", category: "poubelle_jaune", synonyms: ["emballage surgelés"], note: "" },
+      { name: "Sachet de pain (papier)", category: "poubelle_jaune", synonyms: ["sac boulangerie"], note: "S’il n’est pas trop gras." },
+      { name: "Boîte de pâtisserie (carton)", category: "poubelle_jaune", synonyms: ["boite pâtissier"], note: "" },
+      { name: "Emballage de fromage (papier/plastique)", category: "poubelle_jaune", synonyms: ["papier fromage"], note: "Mettre plastique et papier au tri s’ils sont vidés." },
+      { name: "Barquette de charcuterie", category: "poubelle_jaune", synonyms: ["barquette jambon"], note: "" },
+      { name: "Boîte de glace (plastique)", category: "poubelle_jaune", synonyms: ["pot glace plastique"], note: "" },
+      { name: "Boîte de glace (carton)", category: "poubelle_jaune", synonyms: ["pot glace carton"], note: "" },
+      { name: "Filet oignons (plastique)", category: "poubelle_jaune", synonyms: ["filet oignon"], note: "" },
+      { name: "Filet ail (plastique)", category: "poubelle_jaune", synonyms: ["filet ails"], note: "" },
+
+      // ===================== Compost (déchets organiques) =====================
+      { name: "Restes de légumes", category: "compost", synonyms: ["épluchures","déchets de cuisine","restes végétaux"], note: "Convient au composteur domestique ou à la collecte biodéchets." },
+      { name: "Peau de banane", category: "compost", synonyms: ["banane épluchure"], note: "" },
+      { name: "Peau d’orange", category: "compost", synonyms: ["orange épluchure"], note: "" },
+      { name: "Marc de café", category: "compost", synonyms: ["café marc","filtre café"], note: "" },
+      { name: "Filtre à café", category: "compost", synonyms: ["filtre papier café"], note: "" },
+      { name: "Sachet de thé sans agrafe", category: "compost", synonyms: ["thé sachet"], note: "Retirer l’agrafe si possible." },
+      { name: "Coquilles d’œuf", category: "compost", synonyms: ["coquille oeuf","coquilles oeufs"], note: "À émietter." },
+      { name: "Pain rassis", category: "compost", synonyms: ["pain sec"], note: "" },
+      { name: "Fleurs fanées", category: "compost", synonyms: ["bouquet fané","fleurs mortes"], note: "" },
+      { name: "Feuilles mortes", category: "compost", synonyms: ["feuilles jardin"], note: "" },
+      { name: "Tontes de gazon", category: "compost", synonyms: ["herbe coupée"], note: "À mélanger avec matières sèches." },
+      { name: "Petites branches broyées", category: "compost", synonyms: ["BRF","bois raméal fragmenté"], note: "" },
+      { name: "Essuie‑tout propre", category: "compost", synonyms: ["sopalin propre","mouchoir papier propre"], note: "Si collecte biodéchets acceptée localement." },
+      { name: "Mouchoir en papier", category: "compost", synonyms: ["mouchoirs papier","essuie‑tout"], note: "Selon les consignes locales." },
+      { name: "Bouchon en liège", category: "compost", synonyms: ["liège bouchon"], note: "Vrai liège uniquement (pas plastique)." },
+      { name: "Cheveux et poils", category: "compost", synonyms: ["poils animal","cheveux"], note: "En petites quantités." },
+      { name: "Cendres de bois froides", category: "compost", synonyms: ["cendre cheminée"], note: "Très petites quantités." },
+
+      // ===================== Ordures ménagères =====================
+      { name: "Brosse à dents", category: "ordures", synonyms: ["vieille brosse à dents"], note: "" },
+      { name: "Vaisselle cassée (petites quantités)", category: "ordures", synonyms: ["assiette cassée","bol cassé","porcelaine cassée"], note: "À bien emballer pour éviter les blessures." },
+      { name: "Couches jetables", category: "ordures", synonyms: ["couches bébé","couche"], note: "" },
+      { name: "Lingettes", category: "ordures", synonyms: ["lingette","lingettes nettoyantes"], note: "" },
+      { name: "Masque chirurgical", category: "ordures", synonyms: ["masques jetables"], note: "" },
+      { name: "Gants jetables", category: "ordures", synonyms: ["gants latex","gants nitrile"], note: "" },
+      { name: "Litière pour chat", category: "ordures", synonyms: ["litière animaux"], note: "" },
+      { name: "Mégot de cigarette", category: "ordures", synonyms: ["mégot","cigarette"], note: "" },
+      { name: "Chewing‑gum", category: "ordures", synonyms: ["gomme à mâcher"], note: "" },
+      { name: "Carton de pizza souillé", category: "ordures", synonyms: ["boîte pizza grasse"], note: "Trop gras → ordures." },
+      { name: "Papier cuisson", category: "ordures", synonyms: ["papier sulfurisé"], note: "Souvent siliconé, non recyclable." },
+      { name: "Enveloppe à bulles", category: "ordures", synonyms: ["enveloppe bulle"], note: "Matériaux composites." },
+      { name: "Tickets de caisse", category: "ordures", synonyms: ["ticket caisse","ticket thermique"], note: "Non recyclable." },
+      { name: "Ustensiles jetables (fourchette, couteau, paille)", category: "ordures", synonyms: ["couverts plastique","paille"], note: "Non emballage." },
+      { name: "Brosse vaisselle usée", category: "ordures", synonyms: ["brosse cuisine"], note: "" },
+      { name: "Serpillère usée", category: "ordures", synonyms: ["chiffon sale"], note: "" },
+      { name: "Stylo bille usé", category: "ordures", synonyms: ["bic usé","feutre usé"], note: "" },
+      { name: "Ampoule à incandescence", category: "ordures", synonyms: ["lampe incandescence","ampoule halogène"], note: "Fluocompactes/néons → déchetterie." },
+      { name: "Poisson et viande (restes)", category: "ordures", synonyms: ["restes viande","restes poisson"], note: "Éviter au compost domestique." },
+      { name: "Os et arêtes", category: "ordures", synonyms: ["os", "arêtes poisson"], note: "" },
+      { name: "Coquilles de fruits de mer", category: "ordures", synonyms: ["coquilles huîtres","coquilles moules"], note: "" },
+      { name: "Sac poubelle rempli", category: "ordures", synonyms: ["sac déchets ménagers"], note: "" },
+      { name: "Polystyrène bloc (grand volume)", category: "ordures", synonyms: ["mousse polystyrène"], note: "Selon communes, parfois déchetterie." },
+
+      // ===================== Déchetterie / points de collecte dédiés =====================
+      { name: "Pile", category: "dechetterie", synonyms: ["piles","pile usagée"], note: "Apporter en point de collecte (magasins) ou en déchetterie." },
+      { name: "Batterie", category: "dechetterie", synonyms: ["batterie voiture","batterie lithium"], note: "" },
+      { name: "Ampoule fluocompacte", category: "dechetterie", synonyms: ["basse consommation","ampoule fluo"], note: "Rapporter en point de collecte (magasins) ou en déchetterie." },
+      { name: "Néon", category: "dechetterie", synonyms: ["tube fluorescent"], note: "" },
+      { name: "Huile de friture", category: "dechetterie", synonyms: ["huile usagée"], note: "Ne jamais verser dans l’évier." },
+      { name: "Huile moteur usagée", category: "dechetterie", synonyms: ["huile vidange"], note: "" },
+      { name: "Bidon d’huile moteur vide", category: "dechetterie", synonyms: ["bidon huile moteur vide"], note: "Résidus dangereux; amener en déchetterie." },
+      { name: "Capsule de café en aluminium", category: "dechetterie", synonyms: ["capsule café","dosette café","Nespresso"], note: "Beaucoup d’enseignes reprennent les capsules pour recyclage." },
+      { name: "Capsule de café en plastique", category: "dechetterie", synonyms: ["capsule plastique"], note: "Programmes de reprise dédiés selon marque." },
+      { name: "Cartouche d’encre", category: "dechetterie", synonyms: ["cartouche imprimante","toner"], note: "" },
+      { name: "Petit électroménager", category: "dechetterie", synonyms: ["DEEE","appareil électrique","mixeur","grille‑pain"], note: "Reprise en magasin possible (1 pour 1 / 1 pour 0)." },
+      { name: "Téléphone portable", category: "dechetterie", synonyms: ["smartphone","mobile"], note: "Reprise en magasin, recyclerie, dons." },
+      { name: "Chargeur et câble", category: "dechetterie", synonyms: ["chargeur","câble USB"], note: "" },
+      { name: "Ordinateur", category: "dechetterie", synonyms: ["PC","laptop"], note: "" },
+      { name: "Télévision", category: "dechetterie", synonyms: ["écran TV"], note: "" },
+      { name: "Thermomètre au mercure", category: "dechetterie", synonyms: ["thermomètre mercure"], note: "Déchet dangereux." },
+      { name: "Thermomètre électronique", category: "dechetterie", synonyms: ["thermomètre digital"], note: "" },
+      { name: "Radiographies", category: "dechetterie", synonyms: ["radio médicale"], note: "" },
+      { name: "Extincteur", category: "dechetterie", synonyms: ["extincteur usagé"], note: "" },
+      { name: "Cartouche de gaz camping", category: "dechetterie", synonyms: ["cartouche gaz","camping gaz"], note: "" },
+      { name: "Bouteille de gaz", category: "dechetterie", synonyms: ["bonbonne gaz"], note: "Retour au revendeur recommandé." },
+      { name: "Peinture", category: "dechetterie", synonyms: ["pots de peinture"], note: "Déchet dangereux: déchetterie uniquement." },
+      { name: "Vernis et solvants", category: "dechetterie", synonyms: ["solvant","white‑spirit"], note: "Ne pas jeter à l’évier." },
+      { name: "Produit phytosanitaire", category: "dechetterie", synonyms: ["pesticide","désherbant"], note: "" },
+      { name: "Aérosol dangereux plein", category: "dechetterie", synonyms: ["bombe insecticide pleine"], note: "" },
+      { name: "Pneus", category: "dechetterie", synonyms: ["pneu"], note: "Reprise chez les distributeurs possible." },
+      { name: "Gravats et terre", category: "dechetterie", synonyms: ["déchets inertes","décombres"], note: "" },
+      { name: "Meubles et matelas", category: "dechetterie", synonyms: ["mobilier","matelas"], note: "Don possible si en bon état." },
+      { name: "Casserole/poêle", category: "dechetterie", synonyms: ["casserole","poêle"], note: "" },
+      { name: "Jouet en plastique", category: "dechetterie", synonyms: ["jouet","jouet cassé"], note: "Don si en bon état." },
+      { name: "Sapin de Noël", category: "dechetterie", synonyms: ["sapin"], note: "Broyage/compostage parfois proposé par la commune." },
+      { name: "Médicaments non utilisés", category: "dechetterie", synonyms: ["médicament périmé"], note: "Rapporter en pharmacie (Cyclamed), pas en poubelle." },
+      { name: "Batterie d’ordinateur", category: "dechetterie", synonyms: ["batterie lithium laptop"], note: "" },
+      { name: "Lampe LED défectueuse", category: "dechetterie", synonyms: ["ampoule LED"], note: "" },
+      { name: "Toner d’imprimante", category: "dechetterie", synonyms: ["cartouche laser"], note: "" },
+      { name: "Fer à repasser", category: "dechetterie", synonyms: ["fer"], note: "" },
+      { name: "Radiateur électrique", category: "dechetterie", synonyms: ["convecteur"], note: "" },
+      { name: "Ventilateur", category: "dechetterie", synonyms: ["ventilo"], note: "" },
+      { name: "Micro‑ondes", category: "dechetterie", synonyms: ["four micro ondes"], note: "" },
+      { name: "Imprimante", category: "dechetterie", synonyms: ["imprimante jet d’encre","imprimante laser"], note: "" },
+      { name: "Tondeuse à gazon", category: "dechetterie", synonyms: ["tondeuse"], note: "" },
+      { name: "Outils électriques", category: "dechetterie", synonyms: ["perceuse","scie sauteuse"], note: "" },
+      { name: "Parasol cassé", category: "dechetterie", synonyms: ["parasol"], note: "" },
+
+      // ===================== Cas spécifiques =====================
+      { name: "Papier cadeau plastifié/pailleté", category: "ordures", synonyms: ["papier cadeau brillant"], note: "Non recyclable." },
+      { name: "Assiette en carton sale", category: "ordures", synonyms: ["assiette carton souillée"], note: "" },
+      { name: "Barquette PLA dite compostable", category: "ordures", synonyms: ["emballage biodégradable"], note: "Compost industriel uniquement. À domicile: ordures." },
+      { name: "Papier aluminium très sale", category: "ordures", synonyms: ["alu sale"], note: "" },
+      { name: "Carton souillé (gras, humide)", category: "ordures", synonyms: ["carton gras"], note: "" }
+    ];
+
+    const CATEGORY_INFO = {
+      poubelle_jaune: {
+        label: "Poubelle jaune de tri",
+        className: "cat-jaune",
+        emoji: "🟡♻️",
+        announce: "À déposer dans la poubelle jaune de tri.",
+      },
+      compost: {
+        label: "Compost",
+        className: "cat-compost",
+        emoji: "🌿",
+        announce: "À mettre au compost (ou bac biodéchets si présent).",
+      },
+      ordures: {
+        label: "Ordures ménagères",
+        className: "cat-ordures",
+        emoji: "🗑️",
+        announce: "À jeter avec les ordures ménagères.",
+      },
+      dechetterie: {
+        label: "Déchetterie",
+        className: "cat-dechetterie",
+        emoji: "🏭",
+        announce: "À déposer en déchetterie ou point de collecte dédié.",
+      },
+    };
+
+    const input = document.getElementById("product-input");
+    const clearBtn = document.getElementById("clear-btn");
+    const suggList = document.getElementById("suggestions");
+    const result = document.getElementById("result");
+    const productNameEl = document.getElementById("product-name");
+    const badgeEl = document.getElementById("category-badge");
+    const badgeText = badgeEl.querySelector("span:last-child");
+    const badgeIcon = badgeEl.querySelector(".ico");
+    const categoryNote = document.getElementById("category-note");
+    const synonymsWrap = document.getElementById("synonyms");
+
+    let activeIndex = -1;
+    let currentSuggestions = [];
+
+    // Utils
+    function norm(str){
+      return (str || "")
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+    function escapeHTML(s){
+      return (s ?? "").toString()
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    }
+    function escapeRegex(s){
+      return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    function highlight(text, query){
+      if(!query) return escapeHTML(text);
+      try{
+        const re = new RegExp(escapeRegex(query), "ig");
+        return escapeHTML(text).replace(re, (m)=> `<mark>${escapeHTML(m)}</mark>`);
+      }catch{
+        return escapeHTML(text);
+      }
+    }
+
+    function scoreItem(q, item){
+      const nQ = norm(q);
+      const fields = [item.name, ...(item.synonyms || [])].map(norm);
+      let best = -Infinity;
+      for(const f of fields){
+        if(!nQ) { best = Math.max(best, 0); continue; }
+        if(f === nQ) best = Math.max(best, 1000);
+        else if(f.startsWith(nQ)) best = Math.max(best, 800 - (f.length - nQ.length));
+        else if(f.includes(nQ)) best = Math.max(best, 400 - (f.indexOf(nQ)));
+      }
+      best += Math.max(0, 40 - item.name.length);
+      return best;
+    }
+
+    function search(q, limit=10){
+      const scored = ITEMS
+        .map(item => ({ item, s: scoreItem(q, item)}))
+        .filter(x => x.s > (q ? 250 : 0))
+        .sort((a,b) => b.s - a.s)
+        .slice(0, limit)
+        .map(x => x.item);
+      return scored;
+    }
+
+    function categoryPill(cat){
+      const info = CATEGORY_INFO[cat];
+      const label = info ? info.label : "Catégorie";
+      const cls = info ? info.className : "";
+      return `<span class="pill ${cls}">${label}</span>`;
+    }
+
+    function renderSuggestions(items){
+      suggList.innerHTML = "";
+      activeIndex = -1;
+      input.setAttribute("aria-activedescendant", "");
+      currentSuggestions = items;
+
+      const q = input.value;
+      const head = document.createElement("div");
+      head.className = "s-head";
+      head.textContent = items.length ? "Suggestions" : "Aucune suggestion";
+      suggList.appendChild(head);
+
+      if(items.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "empty";
+        empty.textContent = "Essayez un autre mot (ex. \"brique\", \"carton\", \"pile\"…).";
+        suggList.appendChild(empty);
+        suggList.hidden = false;
+        setExpanded(true);
+        return;
+      }
+
+      items.forEach((it, idx) => {
+        const row = document.createElement("div");
+        row.id = `sug-${idx}`;
+        row.className = "s-item";
+        row.role = "option";
+        row.tabIndex = -1;
+        row.setAttribute("data-index", String(idx));
+        row.innerHTML = `
+          <div class="s-left">
+            <div class="avatar" aria-hidden="true">🔹</div>
+            <div class="label">${highlight(it.name, q)}</div>
+          </div>
+          <div class="s-right">
+            ${categoryPill(it.category)}
+            <div class="arrow" aria-hidden="true">➔</div>
+          </div>
+        `;
+        row.addEventListener("click", () => selectSuggestion(idx));
+        suggList.appendChild(row);
+      });
+      suggList.hidden = false;
+      setExpanded(true);
+    }
+
+    function setExpanded(expanded){
+      const wrap = input.closest(".search-wrap");
+      wrap?.setAttribute("aria-expanded", expanded ? "true" : "false");
+    }
+
+    function moveActive(delta){
+      if(suggList.hidden) return;
+      const items = Array.from(suggList.querySelectorAll(".s-item"));
+      const count = items.length;
+      if(count === 0) return;
+      activeIndex = (activeIndex + delta + count) % count;
+      items.forEach((li, i) => {
+        if(!(li instanceof HTMLElement)) return;
+        if(i === activeIndex){
+          li.setAttribute("aria-selected", "true");
+          input.setAttribute("aria-activedescendant", li.id);
+          li.scrollIntoView({ block: "nearest" });
+        }else{
+          li.setAttribute("aria-selected", "false");
+        }
+      });
+    }
+
+    function closeSuggestions(){
+      suggList.hidden = true;
+      setExpanded(false);
+      activeIndex = -1;
+      input.setAttribute("aria-activedescendant", "");
+    }
+
+    function selectSuggestion(idx){
+      const chosen = currentSuggestions[idx];
+      if(!chosen) return;
+      input.value = chosen.name;
+      closeSuggestions();
+      showResult(chosen);
+    }
+
+    function renderSynonyms(syns){
+      if(!syns || syns.length === 0){
+        synonymsWrap.hidden = true;
+        synonymsWrap.innerHTML = "";
+        return;
+      }
+      synonymsWrap.innerHTML = syns.map(s => `<span class="syn-chip">${escapeHTML(s)}</span>`).join("");
+      synonymsWrap.hidden = false;
+    }
+
+    function showResult(item){
+      const info = CATEGORY_INFO[item.category] || {label: "Catégorie", className: "", emoji: "ℹ️"};
+      productNameEl.textContent = item.name;
+      // Badge
+      badgeEl.className = "badge " + info.className;
+      badgeText.textContent = info.label;
+      badgeIcon.textContent = info.emoji || "ℹ️";
+      // Note
+      categoryNote.textContent = item.note ? item.note : info.announce || "";
+      // Synonymes
+      renderSynonyms(item.synonyms);
+      // Affichage
+      result.hidden = false;
+      requestAnimationFrame(() => result.classList.add("show"));
+    }
+
+    function clearAll(){
+      input.value = "";
+      closeSuggestions();
+      result.classList.remove("show");
+      result.hidden = true;
+      input.focus();
+    }
+
+    // Events
+    input.addEventListener("input", () => {
+      const q = input.value;
+      const items = search(q);
+      if(q.length === 0){
+        renderSuggestions(ITEMS.slice(0, 10));
+      }else{
+        renderSuggestions(items);
+      }
+    });
+
+    input.addEventListener("focus", () => {
+      const q = input.value;
+      const items = q ? search(q) : ITEMS.slice(0,10);
+      renderSuggestions(items);
+    });
+
+    input.addEventListener("keydown", (e) => {
+      switch(e.key){
+        case "ArrowDown":
+          e.preventDefault();
+          moveActive(1);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          moveActive(-1);
+          break;
+        case "Enter":
+          if(!suggList.hidden){
+            e.preventDefault();
+            if(activeIndex >= 0){ selectSuggestion(activeIndex); }
+            else if(currentSuggestions.length > 0){ selectSuggestion(0); }
+          }
+          break;
+        case "Escape":
+          if(!suggList.hidden){
+            e.preventDefault();
+            closeSuggestions();
+          }
+          break;
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      const wrap = input.closest(".search-wrap");
+      if(!wrap) return;
+      if(!wrap.contains(e.target)){
+        closeSuggestions();
+      }
+    });
+
+    clearBtn.addEventListener("click", clearAll);
+
+    // Initial suggestions
+    renderSuggestions(ITEMS.slice(0,10));
+  </script>
+</body>
+</html>
